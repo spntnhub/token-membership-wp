@@ -4,7 +4,7 @@ Tags: nft, token, membership, web3, blockchain, content-gate, wallet, polygon
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.0
-Stable tag: 1.3.0
+Stable tag: 1.3.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -48,6 +48,17 @@ No per-project deployment is required.
 * Redis-cached access checks (60-second TTL) — fast, minimal blockchain calls
 * Token expiration support — memberships with `membershipDays` show an "Expired" state with a renew button
 * Fully independent from the NFT SaaS artwork plugin
+
+= Creator Dashboard =
+
+Manage your membership projects at **[spntn.com/token_membership](https://spntn.com/token_membership)**.
+
+* **Email verification** — accounts require email confirmation before first login
+* **Project settings** — configure name, price (wei), supply cap, membership duration (`membershipDays`), and webhook URL
+* **Revenue tracking** — see cumulative revenue per project aggregated from all on-chain mints
+* **Member list + revoke** — view all token holders with mint dates; revoke a member's access with one click (invalidates Redis cache immediately)
+* **Webhook notifications** — set a Webhook URL on any project to receive HTTP POST events for `member.created` and `member.revoked`
+* **Plan tiers** — free / starter / pro plans enforce project and token limits
 
 = Shortcode Attributes =
 
@@ -109,6 +120,14 @@ No. The NFT SaaS plugin is for artists to sell individual NFT artworks from thei
 Directly to the **Creator Wallet** you set in the dashboard — in the same on-chain transaction. No withdrawal needed.
 
 == Changelog ==
+
+= 1.3.1 =
+* Platform: email verification required for new dashboard accounts
+* Platform: revenue tracking per project (cumulative `priceWei` aggregation)
+* Platform: member revoke endpoint — removes token record and invalidates Redis cache
+* Platform: webhook URL field in project settings — fires `member.created` and `member.revoked` events
+* Platform: `membershipDays` now configurable from the dashboard project creation and settings forms
+* Fix: legacy dashboard accounts (created before verification requirement) can log in without re-verifying
 
 = 1.3.0 =
 * Added `[token_buy]` standalone buy / membership button shortcode

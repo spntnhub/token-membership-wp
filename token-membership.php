@@ -3,7 +3,7 @@
  * Plugin Name:       Token Membership for WordPress
  * Plugin URI:        https://spntn.com/token-membership
  * Description:       Gate your content using blockchain token ownership. Users connect their wallet — if they hold the required membership token, the content is unlocked instantly.
- * Version:           1.3.0
+ * Version:           1.3.1
  * Requires at least: 6.0
  * Requires PHP:      8.0
  * Author:            SPNTN
@@ -15,7 +15,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'TM_VERSION',     '1.3.0' );
+define( 'TM_VERSION',     '1.3.1' );
 define( 'TM_PLUGIN_DIR',  plugin_dir_path( __FILE__ ) );
 define( 'TM_PLUGIN_URL',  plugin_dir_url( __FILE__ ) );
 define( 'TM_OPTION_KEY',  'token_membership_settings' );
