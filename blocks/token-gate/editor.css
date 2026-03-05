@@ -1,0 +1,66 @@
+/* Token Membership — Gutenberg block editor styles */
+
+.tm-block-editor-wrap {
+  border: 2px dashed #c7d2fe;
+  border-radius: 10px;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #fafaff;
+}
+
+.tm-block-editor-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6em;
+  padding: 0.9em 1em 0.7em;
+  background: #5850ec;
+  color: #fff;
+}
+
+.tm-block-lock-icon {
+  font-size: 1.4em;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 0.05em;
+}
+
+.tm-block-editor-header strong {
+  display: block;
+  font-size: 0.95em;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.3;
+}
+
+.tm-block-editor-desc {
+  color: rgba(255,255,255,0.82);
+  font-size: 0.82em;
+  margin: 0.25em 0 0;
+  line-height: 1.4;
+}
+
+.tm-block-editor-pid {
+  display: block;
+  margin: 0.6em 1em;
+  padding: 0.3em 0.6em;
+  background: #e0e7ff;
+  border-radius: 5px;
+  font-size: 0.78em;
+  color: #4338ca;
+}
+
+.tm-block-editor-notice.components-notice {
+  margin: 0.6em 1em;
+}
+
+.tm-block-editor-content {
+  padding: 0.6em 1em 0.9em;
+  border-top: 1px solid #e0e7ff;
+}
+
+.tm-block-editor-content-label {
+  font-size: 0.78em;
+  color: #64748b;
+  margin: 0 0 0.5em;
+  font-style: italic;
+}

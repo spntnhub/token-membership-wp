@@ -4,7 +4,7 @@ Tags: nft, token, membership, web3, blockchain, content-gate, wallet, polygon
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.0
-Stable tag: 1.2.0
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -38,11 +38,15 @@ No per-project deployment is required.
 
 * One shortcode for any content type — posts, pages, custom post types
 * Multiple gated sections per page with different `project_id` values
-* MetaMask + compatible wallet support (EIP-1193)
+* `[token_gate]` alias — spec-compatible shortcode (same as `[token_membership]`)
+* `[token_buy]` standalone buy button — add a purchase/renew button anywhere without gating content
+* Gutenberg block support — **Token Gate** block with InnerBlocks and sidebar controls
+* MetaMask + compatible wallet support (EIP-1193 / EIP-6963 multi-wallet)
 * Native POL payments and ERC-20 payments (USDC, USDT, any whitelisted token)
 * Shared Polygon contract — no deployment needed per project
 * API key stays server-side (PHP proxy) — never exposed to the browser
-* Redis-cached access checks (30-second TTL) — fast, minimal blockchain calls
+* Redis-cached access checks (60-second TTL) — fast, minimal blockchain calls
+* Token expiration support — memberships with `membershipDays` show an "Expired" state with a renew button
 * Fully independent from the NFT SaaS artwork plugin
 
 = Shortcode Attributes =
@@ -52,6 +56,10 @@ No per-project deployment is required.
 * `project_id` (required unless set as default in Settings) — your project ID from the SPNTN dashboard
 * `title` — override the "Members Only" heading
 * `description` — override the gate description text
+
+`[token_gate project="..."]` — alias for `[token_membership]` with `project` instead of `project_id`.
+
+`[token_buy project_id="..." label="..." description="..."]` — renders a buy button (and member badge when access is granted) without wrapping any content.
 
 = Payment Flow =
 
@@ -101,6 +109,16 @@ No. The NFT SaaS plugin is for artists to sell individual NFT artworks from thei
 Directly to the **Creator Wallet** you set in the dashboard — in the same on-chain transaction. No withdrawal needed.
 
 == Changelog ==
+
+= 1.3.0 =
+* Added `[token_buy]` standalone buy / membership button shortcode
+* Added `[token_gate]` shortcode alias (spec-compatible `project` attribute)
+* Added Gutenberg **Token Gate** block with InnerBlocks and sidebar inspector controls
+* Added token expiration support — expired memberships show an amber "Expired" state with a Renew button
+* Added member badge in access state for `[token_buy]` ("Active Member" with expiry date when applicable)
+* Bumped Redis access cache TTL from 30s to 60s
+* Backend: `membershipDays` field on projects; `expiryDate` stored on access tokens
+* Backend: `/check` now returns `expired: true` and `expiresAt` fields
 
 = 1.2.0 =
 * Added EIP-6963 multi-wallet support (Coinbase, Rainbow, Trust, etc.)

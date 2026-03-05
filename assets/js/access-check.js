@@ -54,7 +54,19 @@
             this._setState(gate, 'success');
             await _sleep(2500);
           }
+          // Show expiry notice if the API returned an expiresAt date
+          if (data.expiresAt) {
+            this._setExpiryNotice(gate, data.expiresAt);
+          }
           this._setState(gate, 'access');
+        } else if (data.expired) {
+          // Token exists but has passed its expiry date
+          if (data.price) {
+            gate.dataset.priceWei = data.price;
+            gate.dataset.currency = data.currency || 'POL';
+          }
+          this._populatePrice(gate);
+          this._setState(gate, 'expired');
         } else {
           if (retries > 0) {
             await _sleep(1800);
@@ -92,6 +104,18 @@
         el.textContent  = 'Price: ' + formatted + ' ' + currency;
         el.style.display = '';
       } catch { el.style.display = 'none'; }
+    },
+
+    // Show a subtle expiry date reminder inside the access state
+    _setExpiryNotice(gate, expiresAtRaw) {
+      const el = gate.querySelector('.tm-expiry-notice');
+      if (!el) return;
+      try {
+        const date = new Date(expiresAtRaw);
+        const formatted = date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        el.textContent = 'Membership valid until ' + formatted;
+        el.style.display = '';
+      } catch { /* ignore */ }
     },
 
     _setState(gate, state) {

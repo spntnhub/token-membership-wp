@@ -1,0 +1,23 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "token-membership/gate",
+  "version": "1.3.0",
+  "title": "Token Gate",
+  "category": "common",
+  "icon": "lock",
+  "description": "Gate content based on token ownership. Users must hold the required membership token to see the content.",
+  "keywords": ["token", "membership", "gate", "blockchain", "wallet", "nft", "web3"],
+  "textdomain": "token-membership",
+  "attributes": {
+    "projectId":   { "type": "string",  "default": "" },
+    "title":       { "type": "string",  "default": "Members Only" },
+    "description": { "type": "string",  "default": "This content is for members only." }
+  },
+  "supports": {
+    "html": false,
+    "color": false,
+    "typography": false
+  },
+  "usesContext": []
+}

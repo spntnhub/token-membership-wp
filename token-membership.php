@@ -3,7 +3,7 @@
  * Plugin Name:       Token Membership for WordPress
  * Plugin URI:        https://spntn.com/token-membership
  * Description:       Gate your content using blockchain token ownership. Users connect their wallet — if they hold the required membership token, the content is unlocked instantly.
- * Version:           1.2.0
+ * Version:           1.3.0
  * Requires at least: 6.0
  * Requires PHP:      8.0
  * Author:            SPNTN
@@ -15,7 +15,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'TM_VERSION',     '1.0.0' );
+define( 'TM_VERSION',     '1.3.0' );
 define( 'TM_PLUGIN_DIR',  plugin_dir_path( __FILE__ ) );
 define( 'TM_PLUGIN_URL',  plugin_dir_url( __FILE__ ) );
 define( 'TM_OPTION_KEY',  'token_membership_settings' );
@@ -23,15 +23,52 @@ define( 'TM_OPTION_KEY',  'token_membership_settings' );
 require_once TM_PLUGIN_DIR . 'includes/class-settings.php';
 require_once TM_PLUGIN_DIR . 'includes/class-shortcode.php';
 require_once TM_PLUGIN_DIR . 'includes/class-wallet-session.php';
+require_once TM_PLUGIN_DIR . 'includes/class-buy-shortcode.php';
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 
 add_action( 'init', [ 'TM_Shortcode', 'register' ] );
+add_action( 'init', [ 'TM_Buy_Shortcode', 'register' ] );
+add_action( 'init', 'tm_register_block' );
 add_action( 'admin_menu', [ 'TM_Settings', 'add_menu' ] );
 add_action( 'admin_init', [ 'TM_Settings', 'register_settings' ] );
 add_action( 'wp_enqueue_scripts', 'tm_enqueue_assets' );
 add_action( 'wp_ajax_tm_record_mint',        'tm_ajax_record_mint' );
 add_action( 'wp_ajax_nopriv_tm_record_mint', 'tm_ajax_record_mint' );
+
+// ── Gutenberg Block Registration ──────────────────────────────────────────────
+
+function tm_register_block() {
+    if ( ! function_exists( 'register_block_type' ) ) return;
+
+    // Register editor script
+    wp_register_script(
+        'tm-block-editor',
+        TM_PLUGIN_URL . 'blocks/token-gate/editor.js',
+        [ 'wp-blocks', 'wp-block-editor', 'wp-components', 'wp-i18n', 'wp-element' ],
+        TM_VERSION,
+        true
+    );
+
+    // Register editor stylesheet
+    wp_register_style(
+        'tm-block-editor-style',
+        TM_PLUGIN_URL . 'blocks/token-gate/editor.css',
+        [ 'wp-block-editor' ],
+        TM_VERSION
+    );
+
+    register_block_type( 'token-membership/gate', [
+        'editor_script'   => 'tm-block-editor',
+        'editor_style'    => 'tm-block-editor-style',
+        'render_callback' => [ 'TM_Shortcode', 'render_block' ],
+        'attributes'      => [
+            'projectId'   => [ 'type' => 'string', 'default' => '' ],
+            'title'       => [ 'type' => 'string', 'default' => 'Members Only' ],
+            'description' => [ 'type' => 'string', 'default' => 'This content is for members only.' ],
+        ],
+    ] );
+}
 
 // ── Asset Enqueue ─────────────────────────────────────────────────────────────
 

@@ -1,75 +1,58 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-class TM_Shortcode {
+/**
+ * TM_Buy_Shortcode
+ *
+ * Renders a standalone buy / membership button without gating any content.
+ *
+ * Usage:
+ *   [token_buy project_id="abc123"]
+ *   [token_buy project_id="abc123" label="Subscribe Now"]
+ *
+ * When wallet is connected and user already holds the token the shortcode
+ * shows an "Active Member" badge instead of the buy flow.
+ * All state transitions are handled by the same access-check.js used for
+ * the [token_membership] gate — the only difference is the "access" state
+ * shows a badge rather than gated content.
+ */
+class TM_Buy_Shortcode {
 
     public static function register() {
-        add_shortcode( 'token_membership', [ self::class, 'render' ] );
-        // Spec alias: [token_gate project="123"] works identically
-        add_shortcode( 'token_gate', [ self::class, 'render_gate_alias' ] );
+        add_shortcode( 'token_buy', [ self::class, 'render' ] );
     }
 
-    /**
-     * [token_gate project="123"] — alias that maps 'project' to 'project_id'
-     */
-    public static function render_gate_alias( $atts, $content = '' ) {
-        if ( isset( $atts['project'] ) && ! isset( $atts['project_id'] ) ) {
-            $atts['project_id'] = $atts['project'];
-        }
-        return self::render( $atts, $content );
-    }
-
-    /**
-     * Gutenberg render_callback.
-     * Receives $attributes (block attrs) and $content (rendered InnerBlocks HTML).
-     */
-    public static function render_block( array $attributes, string $content ): string {
-        return self::render(
-            [
-                'project_id'  => $attributes['projectId']   ?? '',
-                'title'       => $attributes['title']       ?? 'Members Only',
-                'description' => $attributes['description'] ?? 'This content is for members only.',
-            ],
-            $content
-        );
-    }
-
-    /**
-     * [token_membership project_id="abc123"]
-     *   Protected content here.
-     * [/token_membership]
-     */
-    public static function render( $atts, $content = '' ) {
+    public static function render( $atts ) {
         $opts = get_option( TM_OPTION_KEY, [] );
 
         $atts = shortcode_atts(
             [
                 'project_id'  => $opts['default_project_id'] ?? '',
-                'title'       => __( 'Members Only', 'token-membership' ),
-                'description' => __( 'This content is for members only.', 'token-membership' ),
+                'label'       => __( 'Get Membership', 'token-membership' ),
+                'description' => '',
             ],
             $atts,
-            'token_membership'
+            'token_buy'
         );
 
         $project_id  = sanitize_text_field( $atts['project_id'] );
-        $title       = sanitize_text_field( $atts['title'] );
+        $label       = sanitize_text_field( $atts['label'] );
         $description = sanitize_text_field( $atts['description'] );
 
         if ( ! $project_id ) {
             if ( current_user_can( 'manage_options' ) ) {
                 return '<p class="tm-error">' .
-                    esc_html__( '[token_membership] Error: no project_id set. Configure it in Settings → Token Membership.', 'token-membership' ) .
+                    esc_html__( '[token_buy] Error: no project_id set. Configure it in Settings → Token Membership.', 'token-membership' ) .
                     '</p>';
             }
             return '';
         }
 
-        $unique_id = 'tm-gate-' . esc_attr( $project_id ) . '-' . wp_rand( 1000, 9999 );
+        $unique_id = 'tm-buy-' . esc_attr( $project_id ) . '-' . wp_rand( 1000, 9999 );
 
         ob_start();
         ?>
-        <div class="tm-gate" id="<?php echo esc_attr( $unique_id ); ?>"
+        <div class="tm-gate tm-gate--buy-only" id="<?php echo esc_attr( $unique_id ); ?>"
              data-project-id="<?php echo esc_attr( $project_id ); ?>">
 
             <?php /* Loading state */ ?>
@@ -79,8 +62,9 @@ class TM_Shortcode {
 
             <?php /* Not connected */ ?>
             <div class="tm-state tm-state--disconnected" style="display:none">
-                <strong class="tm-gate-title"><?php echo esc_html( $title ); ?></strong>
-                <p><?php echo esc_html( $description ); ?></p>
+                <?php if ( $description ) : ?>
+                    <p><?php echo esc_html( $description ); ?></p>
+                <?php endif; ?>
                 <button class="tm-btn tm-btn--connect" type="button">
                     <?php esc_html_e( 'Connect Wallet', 'token-membership' ); ?>
                 </button>
@@ -88,26 +72,13 @@ class TM_Shortcode {
 
             <?php /* No access — show price and buy button */ ?>
             <div class="tm-state tm-state--no-access" style="display:none">
-                <strong class="tm-gate-title"><?php echo esc_html( $title ); ?></strong>
-                <p><?php echo esc_html( $description ); ?></p>
+                <?php if ( $description ) : ?>
+                    <p><?php echo esc_html( $description ); ?></p>
+                <?php endif; ?>
                 <p class="tm-price-display" style="display:none"></p>
                 <button class="tm-btn tm-btn--buy" type="button"
                         data-project-id="<?php echo esc_attr( $project_id ); ?>">
-                    <?php esc_html_e( 'Get Membership', 'token-membership' ); ?>
-                </button>
-            </div>
-
-            <?php /* Expired — token exists but validity period has passed */ ?>
-            <div class="tm-state tm-state--expired" style="display:none">
-                <div class="tm-expired-badge">
-                    <span class="tm-expired-icon">⏱</span>
-                    <strong><?php esc_html_e( 'Membership Expired', 'token-membership' ); ?></strong>
-                </div>
-                <p><?php esc_html_e( 'Your membership token has expired. Renew to restore access.', 'token-membership' ); ?></p>
-                <p class="tm-price-display" style="display:none"></p>
-                <button class="tm-btn tm-btn--buy" type="button"
-                        data-project-id="<?php echo esc_attr( $project_id ); ?>">
-                    <?php esc_html_e( 'Renew Membership', 'token-membership' ); ?>
+                    <?php echo esc_html( $label ); ?>
                 </button>
             </div>
 
@@ -137,6 +108,20 @@ class TM_Shortcode {
                 <p class="tm-minting-status"><?php esc_html_e( 'Preparing…', 'token-membership' ); ?></p>
             </div>
 
+            <?php /* Expired — token exists but validity period has passed */ ?>
+            <div class="tm-state tm-state--expired" style="display:none">
+                <div class="tm-expired-badge">
+                    <span class="tm-expired-icon">⏱</span>
+                    <strong><?php esc_html_e( 'Membership Expired', 'token-membership' ); ?></strong>
+                </div>
+                <p><?php esc_html_e( 'Your membership token has expired. Renew to restore access.', 'token-membership' ); ?></p>
+                <p class="tm-price-display" style="display:none"></p>
+                <button class="tm-btn tm-btn--buy" type="button"
+                        data-project-id="<?php echo esc_attr( $project_id ); ?>">
+                    <?php esc_html_e( 'Renew Membership', 'token-membership' ); ?>
+                </button>
+            </div>
+
             <?php /* Error state */ ?>
             <div class="tm-state tm-state--error" style="display:none">
                 <p class="tm-error tm-error-msg"></p>
@@ -145,16 +130,21 @@ class TM_Shortcode {
                 </button>
             </div>
 
-            <?php /* Success / celebration state — shown briefly after mint before content appears */ ?>
+            <?php /* Success / celebration state */ ?>
             <div class="tm-state tm-state--success" style="display:none">
                 <div class="tm-success-icon">🎉</div>
                 <p><?php esc_html_e( "Welcome! You're now a member.", 'token-membership' ); ?></p>
             </div>
 
-            <?php /* Access granted — render actual content */ ?>
+            <?php /* Access granted — member badge (no content to gate) */ ?>
             <div class="tm-state tm-state--access" style="display:none">
-                <p class="tm-expiry-notice" style="display:none"></p>
-                <?php echo wp_kses_post( do_shortcode( $content ) ); ?>
+                <div class="tm-member-badge">
+                    <span class="tm-member-icon">✓</span>
+                    <div>
+                        <strong><?php esc_html_e( 'Active Member', 'token-membership' ); ?></strong>
+                        <p class="tm-expiry-notice" style="display:none"></p>
+                    </div>
+                </div>
             </div>
 
         </div>
