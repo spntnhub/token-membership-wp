@@ -1,0 +1,245 @@
+/* Token Membership for WordPress — token-membership.css */
+
+/* ── Gate container ──────────────────────────────────────────────────────── */
+
+.tm-gate {
+  margin: 1.5em 0;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1.5em 1.75em;
+  font-family: system-ui, -apple-system, sans-serif;
+  max-width: 480px;
+}
+
+/* ── Gate title ──────────────────────────────────────────────────────────── */
+
+.tm-gate-title {
+  display: block;
+  font-size: 1em;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.4em;
+}
+
+/* ── States ──────────────────────────────────────────────────────────────── */
+
+.tm-state--loading p,
+.tm-state--disconnected p,
+.tm-state--no-access p {
+  color: #64748b;
+  font-size: 0.92em;
+  margin: 0 0 0.9em;
+  line-height: 1.5;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+
+.tm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.6em 1.25em;
+  border: none;
+  border-radius: 7px;
+  font-size: 0.92em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  margin-top: 0.25em;
+}
+
+.tm-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.tm-btn--connect {
+  background: #5850ec;
+  color: #fff;
+}
+.tm-btn--connect:hover:not(:disabled) { background: #4338ca; }
+
+.tm-btn--buy {
+  background: #059669;
+  color: #fff;
+}
+.tm-btn--buy:hover:not(:disabled) { background: #047857; }
+
+.tm-btn--retry {
+  background: #f1f5f9;
+  color: #374151;
+  border: 1px solid #e2e8f0;
+  margin-top: 0.75em;
+}
+.tm-btn--retry:hover { background: #e2e8f0; }
+
+/* ── Price display ───────────────────────────────────────────────────────── */
+
+.tm-price-display {
+  display: inline-block;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.3em 0.75em;
+  font-size: 0.88em;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.6em;
+}
+
+/* ── Loading spinner ─────────────────────────────────────────────────────── */
+
+.tm-state--loading p::after {
+  content: '';
+  display: inline-block;
+  width: 0.75em;
+  height: 0.75em;
+  margin-left: 0.5em;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: tm-spin 0.65s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes tm-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Minting — step progress indicator ──────────────────────────────────── */
+
+.tm-state--minting {
+  padding: 0.25em 0;
+}
+
+.tm-progress {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 1em;
+  flex-wrap: wrap;
+  row-gap: 0.5em;
+}
+
+.tm-progress-step {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  font-size: 0.82em;
+}
+
+.tm-step-connector {
+  flex: 1;
+  min-width: 16px;
+  height: 1px;
+  background: #e2e8f0;
+  margin: 0 4px;
+}
+
+.tm-step-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  background: #fff;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  position: relative;
+}
+
+/* Active step: spinning ring */
+.tm-progress-step--active .tm-step-dot {
+  border-color: #5850ec;
+  border-top-color: transparent;
+  animation: tm-spin 0.7s linear infinite;
+}
+
+/* Done step: filled check */
+.tm-progress-step--done .tm-step-dot {
+  background: #059669;
+  border-color: #059669;
+}
+.tm-progress-step--done .tm-step-dot::after {
+  content: '✓';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.tm-step-label {
+  color: #94a3b8;
+  white-space: nowrap;
+}
+.tm-progress-step--active .tm-step-label { color: #5850ec; font-weight: 600; }
+.tm-progress-step--done   .tm-step-label { color: #059669; }
+
+.tm-minting-status {
+  font-size: 0.88em;
+  color: #64748b;
+  margin: 0;
+  min-height: 1.3em;
+}
+
+/* ── Error message ───────────────────────────────────────────────────────── */
+
+.tm-error,
+.tm-error-msg {
+  font-size: 0.88em;
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-left: 3px solid #dc2626;
+  border-radius: 6px;
+  padding: 0.55em 0.85em;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── Success / celebration state ─────────────────────────────────────────── */
+
+.tm-state--success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6em;
+  padding: 1em 0.5em;
+  animation: tm-fade-in 0.35s ease;
+}
+
+.tm-success-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #059669;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4em;
+  animation: tm-pop 0.4s cubic-bezier(.175,.885,.32,1.275);
+}
+
+.tm-state--success p {
+  color: #065f46;
+  font-size: 0.95em;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+}
+
+@keyframes tm-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes tm-pop {
+  0%   { transform: scale(0.5); opacity: 0; }
+  80%  { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
