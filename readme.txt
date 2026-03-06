@@ -51,7 +51,7 @@ No per-project deployment is required.
 
 = Creator Dashboard =
 
-Manage your membership projects at **[spntn.com/token_membership](https://spntn.com/token_membership)**.
+Manage your membership projects at [ spntn.com/token_membership ]( https://spntn.com/token_membership ).
 
 * **Email verification** — accounts require email confirmation before first login
 * **Project settings** — configure name, price (wei), supply cap, membership duration (`membershipDays`), and webhook URL
