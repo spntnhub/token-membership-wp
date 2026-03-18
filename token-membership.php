@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name:       Token Membership for WordPress
+ * Plugin Name:       Token Membership
  * Plugin URI:        https://spntn.com/token-membership
  * Description:       Gate your content using blockchain token ownership. Users connect their wallet — if they hold the required membership token, the content is unlocked instantly.
- * Version:           1.3.1
+ * Version:           1.4.0
  * Requires at least: 6.0
  * Requires PHP:      8.0
  * Author:            SPNTN
@@ -15,10 +15,12 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'TM_VERSION',     '1.3.1' );
-define( 'TM_PLUGIN_DIR',  plugin_dir_path( __FILE__ ) );
-define( 'TM_PLUGIN_URL',  plugin_dir_url( __FILE__ ) );
-define( 'TM_OPTION_KEY',  'token_membership_settings' );
+define( 'TM_VERSION',       '1.4.0' );
+define( 'TM_PLUGIN_DIR',    plugin_dir_path( __FILE__ ) );
+define( 'TM_PLUGIN_URL',    plugin_dir_url( __FILE__ ) );
+define( 'TM_OPTION_KEY',    'tm_token_membership_settings' );
+// Exchange URL for one-time plugin setup codes (never changes).
+define( 'TM_EXCHANGE_URL',  'https://nft-saas-production.up.railway.app/api/v2/keys/setup-code/exchange' );
 
 require_once TM_PLUGIN_DIR . 'includes/class-settings.php';
 require_once TM_PLUGIN_DIR . 'includes/class-shortcode.php';
@@ -27,14 +29,99 @@ require_once TM_PLUGIN_DIR . 'includes/class-buy-shortcode.php';
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 
-add_action( 'init', [ 'TM_Shortcode', 'register' ] );
-add_action( 'init', [ 'TM_Buy_Shortcode', 'register' ] );
+add_action( 'init', [ 'TM_Shortcode', 'tm_register' ] );
+add_action( 'init', [ 'TM_Buy_Shortcode', 'tm_register' ] );
 add_action( 'init', 'tm_register_block' );
-add_action( 'admin_menu', [ 'TM_Settings', 'add_menu' ] );
-add_action( 'admin_init', [ 'TM_Settings', 'register_settings' ] );
+add_action( 'admin_menu', [ 'TM_Settings', 'tm_add_menu' ] );
+add_action( 'admin_init', [ 'TM_Settings', 'tm_register_settings' ] );
+add_action( 'admin_enqueue_scripts', 'tm_admin_enqueue_assets' );
 add_action( 'wp_enqueue_scripts', 'tm_enqueue_assets' );
 add_action( 'wp_ajax_tm_record_mint',        'tm_ajax_record_mint' );
 add_action( 'wp_ajax_nopriv_tm_record_mint', 'tm_ajax_record_mint' );
+add_action( 'wp_ajax_tm_exchange_setup_code', 'tm_ajax_exchange_setup_code' );
+add_action( 'wp_ajax_tm_test_connection',     'tm_ajax_test_connection' );
+
+// ── Admin assets (settings page only) ────────────────────────────────────────
+
+function tm_admin_enqueue_assets( $hook ) {
+    if ( $hook !== 'settings_page_token-membership' ) return;
+    wp_localize_script( 'jquery', 'tmAdmin', [
+        'nonce'   => wp_create_nonce( 'tm_admin_nonce' ),
+        'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+    ] );
+}
+
+// ── AJAX: exchange a setup code for credentials ───────────────────────────────
+
+function tm_ajax_exchange_setup_code() {
+    check_ajax_referer( 'tm_admin_nonce', 'nonce' );
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => 'Unauthorized.' ] );
+    }
+
+    $code = strtoupper( sanitize_text_field( $_POST['code'] ?? '' ) );
+    if ( ! $code ) {
+        wp_send_json_error( [ 'message' => 'Code is required.' ] );
+    }
+
+    $response = wp_remote_get(
+        TM_EXCHANGE_URL . '?code=' . rawurlencode( $code ),
+        [ 'timeout' => 15 ]
+    );
+
+    if ( is_wp_error( $response ) ) {
+        wp_send_json_error( [ 'message' => $response->get_error_message() ] );
+    }
+
+    $body = json_decode( wp_remote_retrieve_body( $response ), true );
+    if ( ! ( $body['success'] ?? false ) ) {
+        wp_send_json_error( [ 'message' => $body['error'] ?? 'Invalid or expired code.' ] );
+    }
+
+    wp_send_json_success( [
+        'apiUrl'           => $body['apiUrl']           ?? '',
+        'apiKey'           => $body['apiKey']           ?? '',
+        'defaultProjectId' => $body['defaultProjectId'] ?? '',
+    ] );
+}
+
+// ── AJAX: test the saved API connection ───────────────────────────────────────
+
+function tm_ajax_test_connection() {
+    check_ajax_referer( 'tm_admin_nonce', 'nonce' );
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( [ 'message' => 'Unauthorized.' ] );
+    }
+
+    $options = get_option( TM_OPTION_KEY, [] );
+    $api_url = $options['api_url'] ?? '';
+    $api_key = $options['api_key'] ?? '';
+
+    if ( ! $api_url || ! $api_key ) {
+        wp_send_json_error( [ 'message' => 'API URL and API Key are not configured yet.' ] );
+    }
+
+    $response = wp_remote_get( trailingslashit( $api_url ) . 'api/auth/key-info', [
+        'headers' => [ 'x-api-key' => $api_key ],
+        'timeout' => 10,
+    ] );
+
+    if ( is_wp_error( $response ) ) {
+        wp_send_json_error( [ 'message' => $response->get_error_message() ] );
+    }
+
+    $code = wp_remote_retrieve_response_code( $response );
+    $body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+    if ( $code === 200 && ( $body['success'] ?? false ) ) {
+        wp_send_json_success( [
+            'email' => $body['email'] ?? '',
+            'tier'  => $body['tier']  ?? '',
+        ] );
+    } else {
+        wp_send_json_error( [ 'message' => $body['error'] ?? 'Connection failed (HTTP ' . $code . ').' ] );
+    }
+}
 
 // ── Gutenberg Block Registration ──────────────────────────────────────────────
 
@@ -73,49 +160,46 @@ function tm_register_block() {
 // ── Asset Enqueue ─────────────────────────────────────────────────────────────
 
 function tm_enqueue_assets() {
-    $options    = get_option( TM_OPTION_KEY, [] );
-    $api_url    = $options['api_url'] ?? '';
-    $project_id = $options['default_project_id'] ?? '';
-
-    // ethers.js v6 CDN
-    wp_enqueue_script(
-        'ethers-js',
-        'https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.2/ethers.umd.min.js',
-        [],
-        '6.13.2',
-        true
-    );
-
-    wp_enqueue_script(
-        'tm-wallet-connect',
-        TM_PLUGIN_URL . 'assets/js/wallet-connect.js',
-        [ 'ethers-js' ],
-        TM_VERSION,
-        true
-    );
-
-    wp_enqueue_script(
-        'tm-access-check',
-        TM_PLUGIN_URL . 'assets/js/access-check.js',
-        [ 'tm-wallet-connect' ],
-        TM_VERSION,
-        true
-    );
-
     wp_enqueue_style(
-        'tm-styles',
+        'tm-token-membership',
         TM_PLUGIN_URL . 'assets/css/token-membership.css',
         [],
         TM_VERSION
     );
-
-    // Pass config to JS
-    wp_localize_script( 'tm-access-check', 'TM_Config', [
-        'apiUrl'           => esc_url_raw( $api_url ),
-        'defaultProjectId' => sanitize_text_field( $project_id ),
-        'ajaxUrl'          => admin_url( 'admin-ajax.php' ),
-        'nonce'            => wp_create_nonce( 'tm_nonce' ),
-    ] );
+    wp_enqueue_script(
+        'tm-access-check',
+        TM_PLUGIN_URL . 'assets/js/access-check.js',
+        [],
+        TM_VERSION,
+        true
+    );
+    wp_enqueue_script(
+        'tm-wallet-connect',
+        TM_PLUGIN_URL . 'assets/js/wallet-connect.js',
+        [],
+        TM_VERSION,
+        true
+    );
+    wp_enqueue_script(
+        'tm-ethers',
+        TM_PLUGIN_URL . 'assets/js/ethers.umd.min.js',
+        [],
+        '6.13.2',
+        true
+    );
+    wp_enqueue_style(
+        'tm-block-editor',
+        TM_PLUGIN_URL . 'blocks/token-gate/editor.css',
+        [],
+        TM_VERSION
+    );
+    wp_enqueue_script(
+        'tm-block-editor',
+        TM_PLUGIN_URL . 'blocks/token-gate/editor.js',
+        [],
+        TM_VERSION,
+        true
+    );
 }
 
 // ── AJAX: sign mint (server-side proxy to keep API key secret) ───────────────────
@@ -135,8 +219,8 @@ function tm_ajax_sign_mint() {
     }
 
     $body = [
-        'projectId'    => sanitize_text_field( $_POST['projectId'] ?? '' ),
-        'buyerAddress' => sanitize_text_field( $_POST['buyerAddress'] ?? '' ),
+        'projectId'    => sanitize_text_field( wp_unslash( $_POST['projectId'] ?? '' ) ),
+        'buyerAddress' => sanitize_text_field( wp_unslash( $_POST['buyerAddress'] ?? '' ) ),
     ];
 
     $response = wp_remote_post( trailingslashit( $api_url ) . 'api/v2/access/sign', [
@@ -176,10 +260,10 @@ function tm_ajax_record_mint() {
     }
 
     $body = [
-        'projectId'     => sanitize_text_field( $_POST['projectId'] ?? '' ),
-        'walletAddress' => sanitize_text_field( $_POST['walletAddress'] ?? '' ),
+        'projectId'     => sanitize_text_field( wp_unslash( $_POST['projectId'] ?? '' ) ),
+        'walletAddress' => sanitize_text_field( wp_unslash( $_POST['walletAddress'] ?? '' ) ),
         'tokenId'       => intval( $_POST['tokenId'] ?? 0 ),
-        'txHash'        => sanitize_text_field( $_POST['txHash'] ?? '' ),
+        'txHash'        => sanitize_text_field( wp_unslash( $_POST['txHash'] ?? '' ) ),
     ];
 
     $response = wp_remote_post( trailingslashit( $api_url ) . 'api/v2/project/token/mint', [

@@ -18,11 +18,11 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  */
 class TM_Buy_Shortcode {
 
-    public static function register() {
+    public static function tm_register() {
         add_shortcode( 'token_buy', [ self::class, 'render' ] );
     }
 
-    public static function render( $atts ) {
+    public static function tm_render( $atts ) {
         $opts = get_option( TM_OPTION_KEY, [] );
 
         $atts = shortcode_atts(

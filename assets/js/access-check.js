@@ -149,6 +149,45 @@
       if (el) el.textContent = message;
       this._setState(gate, 'error');
     },
+
+    _showNoWalletOptions(gate) {
+      const el = gate.querySelector('.tm-error-msg');
+      if (el) {
+        el.textContent = '';
+        const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+        if (isMobile) {
+          const msg = document.createTextNode('No wallet found. Open this page in ');
+          const mmLink = document.createElement('a');
+          mmLink.textContent = 'MetaMask Mobile';
+          mmLink.href = 'https://metamask.app.link/dapp/' + window.location.host + window.location.pathname;
+          mmLink.style.color = '#5850ec';
+          const sep = document.createTextNode(' or ');
+          const twLink = document.createElement('a');
+          twLink.textContent = 'Trust Wallet';
+          twLink.href = 'https://link.trustwallet.com/open_url?url=' + encodeURIComponent(window.location.href);
+          twLink.style.color = '#5850ec';
+          const suffix = document.createTextNode('.');
+          el.appendChild(msg);
+          el.appendChild(mmLink);
+          el.appendChild(sep);
+          el.appendChild(twLink);
+          el.appendChild(suffix);
+        } else {
+          const msg = document.createTextNode('No wallet found. ');
+          const link = document.createElement('a');
+          link.textContent = 'Install MetaMask';
+          link.href = 'https://metamask.io/download/';
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          link.style.color = '#5850ec';
+          const suffix = document.createTextNode(' and refresh the page.');
+          el.appendChild(msg);
+          el.appendChild(link);
+          el.appendChild(suffix);
+        }
+      }
+      this._setState(gate, 'error');
+    },
   };
 
   // ── Event: Connect wallet ──────────────────────────────────────────────────
@@ -165,7 +204,13 @@
       console.error('[Token Membership] connect failed:', err);
       btn.disabled = false;
       btn.textContent = 'Connect Wallet';
-      if (gate) TM_AccessCheck._showError(gate, err.message);
+      if (gate) {
+        if (err.message && err.message.includes('No Web3 wallet')) {
+          TM_AccessCheck._showNoWalletOptions(gate);
+        } else {
+          TM_AccessCheck._showError(gate, err.message);
+        }
+      }
     }
   });
 

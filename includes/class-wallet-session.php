@@ -9,14 +9,15 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 class TM_Wallet_Session {
 
-    const STORAGE_KEY = 'tm_wallet_address';
+    const TM_STORAGE_KEY = 'tm_wallet_address';
 
     /**
      * Returns the connected wallet address from the cookie set by JS,
      * or empty string if not connected.
      */
-    public static function get_wallet(): string {
-        $wallet = $_COOKIE[ self::STORAGE_KEY ] ?? '';
+    public static function tm_get_wallet(): string {
+        $raw_wallet = isset( $_COOKIE[ self::TM_STORAGE_KEY ] ) ? sanitize_text_field( wp_unslash( $_COOKIE[ self::TM_STORAGE_KEY ] ) ) : '';
+        $wallet     = $raw_wallet;
         return preg_match( '/^0x[0-9a-fA-F]{40}$/', $wallet ) ? strtolower( $wallet ) : '';
     }
 
@@ -25,7 +26,7 @@ class TM_Wallet_Session {
      * Allows server-rendered gating for themes that need it.
      * Returns null on error (fall back to client-side check).
      */
-    public static function check_access( string $project_id, string $wallet_address ): ?bool {
+    public static function tm_check_access( string $project_id, string $wallet_address ): ?bool {
         if ( ! $project_id || ! $wallet_address ) return null;
 
         $opts    = get_option( TM_OPTION_KEY, [] );

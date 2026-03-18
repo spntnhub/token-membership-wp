@@ -3,7 +3,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 class TM_Shortcode {
 
-    public static function register() {
+    public static function tm_register() {
         add_shortcode( 'token_membership', [ self::class, 'render' ] );
         // Spec alias: [token_gate project="123"] works identically
         add_shortcode( 'token_gate', [ self::class, 'render_gate_alias' ] );
@@ -12,7 +12,7 @@ class TM_Shortcode {
     /**
      * [token_gate project="123"] — alias that maps 'project' to 'project_id'
      */
-    public static function render_gate_alias( $atts, $content = '' ) {
+    public static function tm_render_gate_alias( $atts, $content = '' ) {
         if ( isset( $atts['project'] ) && ! isset( $atts['project_id'] ) ) {
             $atts['project_id'] = $atts['project'];
         }
@@ -23,7 +23,7 @@ class TM_Shortcode {
      * Gutenberg render_callback.
      * Receives $attributes (block attrs) and $content (rendered InnerBlocks HTML).
      */
-    public static function render_block( array $attributes, string $content ): string {
+    public static function tm_render_block( array $attributes, string $content ): string {
         return self::render(
             [
                 'project_id'  => $attributes['projectId']   ?? '',
@@ -39,7 +39,7 @@ class TM_Shortcode {
      *   Protected content here.
      * [/token_membership]
      */
-    public static function render( $atts, $content = '' ) {
+    public static function tm_render( $atts, $content = '' ) {
         $opts = get_option( TM_OPTION_KEY, [] );
 
         $atts = shortcode_atts(

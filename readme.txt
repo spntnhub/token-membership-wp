@@ -1,18 +1,18 @@
-=== Token Membership for WordPress ===
+=== Token Membership ===
 Contributors: spntn
-Tags: nft, token, membership, web3, blockchain, content-gate, wallet, polygon
+Tags: nft, token, membership, web3, blockchain
 Requires at least: 6.0
-Tested up to: 6.7
+Tested up to: 6.9
 Requires PHP: 8.0
-Stable tag: 1.3.1
+Stable tag: 1.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Gate your WordPress content using blockchain token ownership. Users with a membership token see the content — everyone else sees a "Get Membership" button.
+Gate your content using blockchain token ownership. Users with a membership token see the content — everyone else sees a "Get Membership" button.
 
 == Description ==
 
-**Token Membership for WordPress** connects your site to the SPNTN Token Membership backend to offer token-based access control.
+**Token Membership** connects your site to the SPNTN Token Membership backend to offer token-based access control.
 Instead of passwords or account-based subscriptions, users hold a blockchain NFT that unlocks your content.
 
 All projects share a single deployed contract on Polygon (`0xF912D97BB2fF635c3D432178e46A16930B5Af51A`).
@@ -20,7 +20,7 @@ No per-project deployment is required.
 
 = How it works =
 
-1. Install the plugin and enter your SPNTN API URL + API Key in **Settings → Token Membership**.
+1. Install the plugin and activate it. In the SPNTN dashboard, open your project and click **⚡ Generate Setup Code**. Paste the 8-character code in **Settings → Token Membership → Quick Setup** and click **Apply** — all fields fill automatically.
 2. Create a project in the SPNTN dashboard.
    - Set a **Creator Wallet** — this wallet receives ~97% of every sale on-chain.
    - Click **Activate Project** to link it to the shared Polygon contract.
@@ -58,7 +58,8 @@ Manage your membership projects at [ spntn.com/token_membership ]( https://spntn
 * **Revenue tracking** — see cumulative revenue per project aggregated from all on-chain mints
 * **Member list + revoke** — view all token holders with mint dates; revoke a member's access with one click (invalidates Redis cache immediately)
 * **Webhook notifications** — set a Webhook URL on any project to receive HTTP POST events for `member.created` and `member.revoked`
-* **Plan tiers** — free / starter / pro plans enforce project and token limits
+* **Free to use** — no monthly fee, no project or member limits. The platform takes **3%** of each on-chain mint; creators keep 97%
+* **Quick Setup Code** — generate an 8-character one-time code in the dashboard; paste it into the plugin settings to auto-fill all fields instantly
 
 = Shortcode Attributes =
 
@@ -94,10 +95,11 @@ For ERC-20 payments (USDC etc.) the flow uses `buyAndMintWithToken` with a prior
 
 1. Upload the `token-membership` folder to `/wp-content/plugins/`.
 2. Activate the plugin in **Plugins → Installed Plugins**.
-3. Go to **Settings → Token Membership** and fill in:
-   - **API Base URL** — your Railway backend URL (e.g. `https://nft-saas-production.up.railway.app`)
-   - **API Key** — from the SPNTN dashboard → API Keys page
-   - **Default Project ID** — optional; used when shortcode has no `project_id`
+3. In the SPNTN dashboard, open a project and click **⚡ Generate Setup Code**.
+4. Go to **Settings → Token Membership**, paste the 8-character code in the **Quick Setup** field, and click **Apply**.
+5. API URL, API Key, and Default Project ID are filled automatically.
+
+Alternatively, fill the three fields manually from the SPNTN dashboard.
 
 == Frequently Asked Questions ==
 
@@ -120,6 +122,16 @@ No. The NFT SaaS plugin is for artists to sell individual NFT artworks from thei
 Directly to the **Creator Wallet** you set in the dashboard — in the same on-chain transaction. No withdrawal needed.
 
 == Changelog ==
+
+= 1.4.0 =
+* Platform: switched to **free + 3% per mint** model — no subscription, no project or member limits
+* Dashboard: Quick Setup Code — generate an 8-char one-time code to auto-configure the WordPress plugin (30-min TTL)
+* Plugin: Quick Setup box in Settings — paste code, click Apply, all fields fill automatically
+* Plugin: Test Connection button — verify API key from the settings page
+* Frontend: helpful wallet install prompts for desktop & mobile (MetaMask, Trust Wallet)
+* WordPress gate: no-wallet state shows deep links for MetaMask Mobile & Trust Wallet on mobile
+* Dashboard: member table now shows token expiry date with visual expiry indicator
+* Token metadata: "Membership Duration" attribute added to IPFS token URI
 
 = 1.3.1 =
 * Platform: email verification required for new dashboard accounts
@@ -154,3 +166,25 @@ Directly to the **Creator Wallet** you set in the dashboard — in the same on-c
 
 = 1.0.0 =
 * Initial release.
+
+== External services ==
+
+The Token Membership plugin interacts with several external services:
+
+- **NFT SaaS Backend API**
+  - URL: https://nft-saas-production.up.railway.app
+  - Purpose: Handles authentication, project/project access, mint signatures, webhook events, and IPFS uploads. All plugin features rely on this API for core operations.
+
+- **Polygon Mainnet**
+  - Purpose: Membership token minting and verification are performed on Polygon Mainnet via smart contracts. The plugin interacts with Polygon using ethers.js.
+
+- **IPFS**
+  - Purpose: NFT metadata and media files are uploaded to IPFS for decentralized storage.
+
+- **Webhook Integrations**
+  - Purpose: Creators can configure webhook URLs to receive real-time HTTP POST events from the backend when membership status changes.
+
+- **Explorer Links**
+  - Purpose: Plugin provides links to Polygon block explorers (e.g., Polygonscan) for transaction and token verification.
+
+API keys and sensitive credentials are stored server-side and never exposed to frontend users.
