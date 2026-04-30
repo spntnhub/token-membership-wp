@@ -45,7 +45,9 @@ add_action( 'wp_ajax_tm_test_connection',     'tm_ajax_test_connection' );
 
 function tm_admin_enqueue_assets( $hook ) {
     if ( $hook !== 'settings_page_token-membership' ) return;
-    wp_localize_script( 'jquery', 'tmAdmin', [
+    wp_register_script( 'tm-admin', false, [ 'jquery' ], TM_VERSION, true );
+    wp_enqueue_script( 'tm-admin' );
+    wp_localize_script( 'tm-admin', 'tmAdmin', [
         'nonce'   => wp_create_nonce( 'tm_admin_nonce' ),
         'ajaxUrl' => admin_url( 'admin-ajax.php' ),
     ] );

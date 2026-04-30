@@ -20,7 +20,7 @@ No per-project deployment is required.
 
 = How it works =
 
-1. Install the plugin and activate it. In the SPNTN dashboard, open your project and click **⚡ Generate Setup Code**. Paste the 8-character code in **Settings → Token Membership → Quick Setup** and click **Apply** — all fields fill automatically.
+1. Install the plugin and activate it. In the SPNTN dashboard, open your project and click **Generate Setup Code**. Paste the 8-character code in **Settings → Token Membership → Quick Setup** and click **Apply** — all fields fill automatically.
 2. Create a project in the SPNTN dashboard.
    - Set a **Creator Wallet** — this wallet receives ~97% of every sale on-chain.
    - Click **Activate Project** to link it to the shared Polygon contract.
@@ -95,7 +95,7 @@ For ERC-20 payments (USDC etc.) the flow uses `buyAndMintWithToken` with a prior
 
 1. Upload the `token-membership` folder to `/wp-content/plugins/`.
 2. Activate the plugin in **Plugins → Installed Plugins**.
-3. In the SPNTN dashboard, open a project and click **⚡ Generate Setup Code**.
+3. In the SPNTN dashboard, open a project and click **Generate Setup Code**.
 4. Go to **Settings → Token Membership**, paste the 8-character code in the **Quick Setup** field, and click **Apply**.
 5. API URL, API Key, and Default Project ID are filled automatically.
 
